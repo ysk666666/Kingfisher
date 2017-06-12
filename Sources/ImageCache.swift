@@ -104,7 +104,7 @@ open class ImageCache {
     fileprivate let processQueue: DispatchQueue
     
     /// The default cache.
-    public static let `default` = ImageCache(name: "default")
+    public static let `default` = ImageCache(name: "NetImagesCache")
     
     /// Closure that defines the disk cache path from a given path and cacheName.
     public typealias DiskCachePathClosure = (String?, String) -> String
@@ -136,7 +136,7 @@ open class ImageCache {
             fatalError("[Kingfisher] You should specify a name for the cache. A cache with empty name is not permitted.")
         }
         
-        let cacheName = "com.onevcat.Kingfisher.ImageCache.\(name)"
+        let cacheName = "\(name)"
         memoryCache.name = cacheName
         
         diskCachePath = diskCachePathClosure(path, cacheName)
