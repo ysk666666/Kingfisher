@@ -305,18 +305,18 @@ class KingfisherManagerTests: XCTestCase {
             self.manager.downloadAndCacheImage(with: url, forKey: URLString, retrieveImageTask: RetrieveImageTask(), progressBlock: nil, completionHandler: {
                 (image, error, cacheType, url) in
                 delay(0.1) {
-                    var imageCached = self.manager.cache.isImageCached(forKey: URLString, processorIdentifier: p.identifier)
-                    var originalCached = self.manager.cache.isImageCached(forKey: URLString)
+                    var imageCached = self.manager.cache.imageCachedType(forKey: URLString, processorIdentifier: p.identifier)
+                    var originalCached = self.manager.cache.imageCachedType(forKey: URLString)
                     
-                    XCTAssertEqual(imageCached.cacheType, .memory)
-                    XCTAssertEqual(originalCached.cacheType, .memory)
+                    XCTAssertEqual(imageCached, .memory)
+                    XCTAssertEqual(originalCached, .memory)
                     
                     self.manager.cache.clearMemoryCache()
                     
-                    imageCached = self.manager.cache.isImageCached(forKey: URLString, processorIdentifier: p.identifier)
-                    originalCached = self.manager.cache.isImageCached(forKey: URLString)
-                    XCTAssertEqual(imageCached.cacheType, .disk)
-                    XCTAssertEqual(originalCached.cacheType, .disk)
+                    imageCached = self.manager.cache.imageCachedType(forKey: URLString, processorIdentifier: p.identifier)
+                    originalCached = self.manager.cache.imageCachedType(forKey: URLString)
+                    XCTAssertEqual(imageCached, .disk)
+                    XCTAssertEqual(originalCached, .disk)
                     
                     expectation.fulfill()
                 }
@@ -338,18 +338,18 @@ class KingfisherManagerTests: XCTestCase {
         manager.downloadAndCacheImage(with: url, forKey: URLString, retrieveImageTask: RetrieveImageTask(), progressBlock: nil, completionHandler: {
             (image, error, cacheType, url) in
             delay(0.1) {
-                var imageCached = self.manager.cache.isImageCached(forKey: URLString, processorIdentifier: p.identifier)
-                var originalCached = self.manager.cache.isImageCached(forKey: URLString)
+                var imageCached = self.manager.cache.imageCachedType(forKey: URLString, processorIdentifier: p.identifier)
+                var originalCached = self.manager.cache.imageCachedType(forKey: URLString)
                 
-                XCTAssertEqual(imageCached.cacheType, .memory)
-                XCTAssertEqual(originalCached.cacheType, .none)
+                XCTAssertEqual(imageCached, .memory)
+                XCTAssertEqual(originalCached, .none)
                 
                 self.manager.cache.clearMemoryCache()
                 
-                imageCached = self.manager.cache.isImageCached(forKey: URLString, processorIdentifier: p.identifier)
-                originalCached = self.manager.cache.isImageCached(forKey: URLString)
-                XCTAssertEqual(imageCached.cacheType, .disk)
-                XCTAssertEqual(originalCached.cacheType, .none)
+                imageCached = self.manager.cache.imageCachedType(forKey: URLString, processorIdentifier: p.identifier)
+                originalCached = self.manager.cache.imageCachedType(forKey: URLString)
+                XCTAssertEqual(imageCached, .disk)
+                XCTAssertEqual(originalCached, .none)
                 
                 expectation.fulfill()
             }
@@ -367,13 +367,23 @@ class KingfisherManagerTests: XCTestCase {
         {
             let p = SimpleProcessor()
             
+            let cached = self.manager.cache.imageCachedType(forKey: URLString, processorIdentifier: p.identifier)
+            XCTAssertFalse(cached.cached)
+            
             // No downloading will happen
             self.manager.retrieveImage(with: URL(string: URLString)!, options: [.processor(p)], progressBlock: nil) {
                 image, error, cacheType, url in
                 XCTAssertNotNil(image)
                 XCTAssertEqual(cacheType, .none)
                 XCTAssertTrue(p.processed)
-                expectation.fulfill()
+                
+                // The processed image should be cached
+                delay(0.1) {
+                    let cached = self.manager.cache.imageCachedType(forKey: URLString, processorIdentifier: p.identifier)
+                    XCTAssertTrue(cached.cached)
+                    expectation.fulfill()
+                }
+                
             }
         }
         waitForExpectations(timeout: 5, handler: nil)
